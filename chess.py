@@ -25,6 +25,9 @@ class ChessManTemplate:
         self.notation = notation  # Notation used for output
         self.team = team  # Team specifier
 
+    def __str__(self):
+        return f"Name: {self.name}\nTeam: {self.team}"
+
     def visible_squares(self, pos, board):  # pos -> position of the piece
         pass  # Should return list of squares "visible" to the piece, not including itself
 
