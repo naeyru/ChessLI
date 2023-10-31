@@ -31,6 +31,9 @@ class ChessManTemplate:
     def visible_squares(self, pos, board):  # pos -> position of the piece
         pass  # Should return list of squares "visible" to the piece, not including itself
 
+    def attacking_squares(self, pos, board):
+        pass  # Fundamentally the same as visible squares, only return squares that can be captured
+
 
 class ChessManKing(ChessManTemplate):
     def __init__(self, team):
@@ -47,6 +50,9 @@ class ChessManKing(ChessManTemplate):
                     squares.append(t_pos)
         return squares
 
+    def attacking_squares(self, pos, board):
+        return self.visible_squares(pos, board)
+
 
 class ChessManQueen(ChessManTemplate):
     def __init__(self, team):
@@ -54,6 +60,16 @@ class ChessManQueen(ChessManTemplate):
 
     def visible_squares(self, pos, board):
         return ChessManBishop("white").visible_squares(pos, board) + ChessManRook("white").visible_squares(pos, board)
+
+    def attacking_squares(self, pos, board):
+        squares = self.visible_squares(pos, board)
+        attacking_squares = []
+
+        for piece in squares:
+            if board.board[piece].team != self.team:
+                attacking_squares.append(board.board[piece])
+
+        return attacking_squares
 
 
 class ChessManRook(ChessManTemplate):
@@ -86,6 +102,16 @@ class ChessManRook(ChessManTemplate):
 
         return squares
 
+    def attacking_squares(self, pos, board):
+        squares = self.visible_squares(pos, board)
+        attacking_squares = []
+
+        for piece in squares:
+            if board.board[piece].team != self.team:
+                attacking_squares.append(board.board[piece])
+
+        return attacking_squares
+
 
 class ChessManBishop(ChessManTemplate):
     def __init__(self, team):
@@ -108,6 +134,16 @@ class ChessManBishop(ChessManTemplate):
                     n_pos[1] += dir_y
 
         return squares
+
+    def attacking_squares(self, pos, board):
+        squares = self.visible_squares(pos, board)
+        attacking_squares = []
+
+        for piece in squares:
+            if board.board[piece].team != self.team:
+                attacking_squares.append(board.board[piece])
+
+        return attacking_squares
 
 
 class ChessManKnight(ChessManTemplate):
@@ -132,10 +168,36 @@ class ChessManKnight(ChessManTemplate):
 
         return squares
 
+    def attacking_squares(self, pos, board):
+        squares = self.visible_squares(pos, board)
+        attacking_squares = []
+
+        for piece in squares:
+            if board.board[piece].team != self.team:
+                attacking_squares.append(board.board[piece])
+
+        return attacking_squares
+
 
 class ChessManPawn(ChessManTemplate):
     def __init__(self, team):
         super().__init__("pawn", "p", team)
+
+    def visible_squares(self, pos, board):
+        squares = []
+        dir_y = 1  # if white
+
+        if self.team == "black":
+            dir_y = -1
+
+        for dir_x in [-1, 1]:
+            n_pos = pos_to_index(pos)
+            n_pos[0] += dir_x
+            n_pos[1] += dir_y
+            if valid_pos(index_to_pos(n_pos)):
+                squares.append(index_to_pos(n_pos))
+
+        return squares
 
 
 class ChessManEmpty(ChessManTemplate):
@@ -145,7 +207,7 @@ class ChessManEmpty(ChessManTemplate):
 
 # Chess Board
 class ChessBoard:
-    def __init__(self):  # Not good, switch to FEN/PGN reader
+    def __init__(self):
         self.board = {}
         for f in files:
             for r in ranks:
@@ -183,9 +245,41 @@ class ChessBoard:
                 if self.board[f"{f}{r}"].team != "":
                     print(self.board[f"{f}{r}"], '\n')
 
+    def get_visible_pieces(self, pos):  # Returns all pieces that "see" a specific square
+        pieces = []
+
+        # Find rooks/queens that can see square
+        visible = ChessManRook("white").visible_squares(pos, self)
+        for piece in visible:
+            if self.board[piece].name == "rook" or self.board[piece].name == "queen":
+                pieces.append((self.board[piece], piece))
+
+        # Find bishops/queens that can see square
+        visible = ChessManBishop("white").visible_squares(pos, self)
+        for piece in visible:
+            if self.board[piece].name == "bishop" or self.board[piece].name == "queen":
+                pieces.append((self.board[piece], piece))
+
+        # Find knights that can see squares
+        visible = ChessManKnight("white").visible_squares(pos, self)
+        for piece in visible:
+            if self.board[piece].name == "knight":
+                pieces.append((self.board[piece], piece))
+
+        # Find pawns
+        visible = ChessManPawn("white").visible_squares(pos, self) + ChessManPawn("black").visible_squares(pos, self)
+        for piece in visible:
+            if self.board[piece].name == "pawn":
+                pieces.append((self.board[piece], piece))
+
+        return pieces
+
 
 def main():
-    pass
+    game_board = ChessBoard()
+    game_board.board["e5"] = ChessManQueen("white")
+    for piece in game_board.get_visible_pieces("c3"):
+        print(f"{piece[1]}:\n{piece[0]}\n")
 
 
 if __name__ == "__main__":
