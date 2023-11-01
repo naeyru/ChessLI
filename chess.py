@@ -1,9 +1,22 @@
-# Constants
+"""
+Thomas Safago
+10/30/23
+Algorithm/structure tests for chess. Third revision.
+"""
+
+import copy
+
 files = "abcdefgh"
 ranks = "12345678"
 
 
-# Important utility stuff
+# Chess position things
+def is_valid(pos):
+    if pos[0] not in files or pos[1] not in ranks:
+        return False
+    return True
+
+
 def pos_to_index(pos):
     return [ord(pos[0])-96, int(pos[1])]
 
@@ -12,274 +25,206 @@ def index_to_pos(index):
     return f"{chr(index[0]+96)}{index[1]}"
 
 
-def valid_pos(pos):
-    if pos[0] not in files or pos[1] not in ranks:
-        return False
-    return True
-
-
-# Chess Pieces
+# ChessManTemplate / pieces
+# Should contain name of chessman, notation, team, visible squares function, movable function
 class ChessManTemplate:
     def __init__(self, name, notation, team):
-        self.name = name  # Name of the piece
-        self.notation = notation  # Notation used for output
-        self.team = team  # Team specifier
+        self.name = name
+        self.notation = notation
+        self.team = team
 
     def __str__(self):
-        return f"Name: {self.name}\nTeam: {self.team}"
+        return f"Team: {self.team}\nType: {self.name}"
 
-    def visible_squares(self, pos, board):  # pos -> position of the piece
-        pass  # Should return list of squares "visible" to the piece, not including itself
+    def visible(self, pos, board=None):  # What the piece can see
+        pass
 
-    def attacking_squares(self, pos, board):
-        pass  # Fundamentally the same as visible squares, only return squares that can be captured
+    def movable(self, pos, board=None):  # All squares the piece can move to
+        pass
 
 
-class ChessManKing(ChessManTemplate):
-    def __init__(self, team):
+class King(ChessManTemplate):
+    def __init__(self, team=""):
         super().__init__("king", "k", team)
 
-    def visible_squares(self, pos, board=None):
-        n_pos = pos_to_index(pos)
-        squares = []
+    def visible(self, pos, board=None):
+        pass
 
-        for f in [-1, 0, 1]:
-            for r in [-1, 0, 1]:
-                t_pos = index_to_pos([n_pos[0] - f, n_pos[1] - r])
-                if t_pos != pos and valid_pos(t_pos):
-                    squares.append(t_pos)
-        return squares
-
-    def attacking_squares(self, pos, board):
-        return self.visible_squares(pos, board)
+    def movable(self, pos, board=None):
+        pass
 
 
-class ChessManQueen(ChessManTemplate):
-    def __init__(self, team):
+class Queen(ChessManTemplate):
+    def __init__(self, team=""):
         super().__init__("queen", "q", team)
 
-    def visible_squares(self, pos, board):
-        return ChessManBishop("white").visible_squares(pos, board) + ChessManRook("white").visible_squares(pos, board)
+    def visible(self, pos, board=None):
+        pass
 
-    def attacking_squares(self, pos, board):
-        squares = self.visible_squares(pos, board)
-        attacking_squares = []
-
-        for piece in squares:
-            if board.board[piece].team != self.team:
-                attacking_squares.append(board.board[piece])
-
-        return attacking_squares
+    def movable(self, pos, board=None):
+        pass
 
 
-class ChessManRook(ChessManTemplate):
-    def __init__(self, team):
+class Rook(ChessManTemplate):
+    def __init__(self, team=""):
         super().__init__("rook", "r", team)
 
-    def visible_squares(self, pos, board):
-        squares = []
-        n_pos = pos_to_index(pos)
+    def visible(self, pos, board=None):
+        pass
 
-        # Get rank moves
-        for dir_x in [-1, 1]:
-            t_pos = n_pos.copy()  # IMPORTANT for not using reference
-            t_pos[0] += dir_x
-            while valid_pos(index_to_pos(t_pos)):
-                squares.append(index_to_pos(t_pos))
-                if board.board[index_to_pos(t_pos)].name != "":  # Populated by an actual piece
-                    break
-                t_pos[0] += dir_x
-
-        # Get file moves
-        for dir_y in [-1, 1]:
-            t_pos = n_pos.copy()  # IMPORTANT for not using reference
-            t_pos[1] += dir_y
-            while valid_pos(index_to_pos(t_pos)):
-                squares.append(index_to_pos(t_pos))
-                if board.board[index_to_pos(t_pos)].name != "":  # Populated by an actual piece
-                    break
-                t_pos[1] += dir_y
-
-        return squares
-
-    def attacking_squares(self, pos, board):
-        squares = self.visible_squares(pos, board)
-        attacking_squares = []
-
-        for piece in squares:
-            if board.board[piece].team != self.team:
-                attacking_squares.append(board.board[piece])
-
-        return attacking_squares
+    def movable(self, pos, board=None):
+        pass
 
 
-class ChessManBishop(ChessManTemplate):
-    def __init__(self, team):
+class Bishop(ChessManTemplate):
+    def __init__(self, team=""):
         super().__init__("bishop", "b", team)
 
-    def visible_squares(self, pos, board):
-        squares = []
+    def visible(self, pos, board=None):
+        pass
 
-        # Get diagonals
-        for dir_x in [-1, 1]:
-            for dir_y in [-1, 1]:
-                n_pos = pos_to_index(pos)
-                n_pos[0] += dir_x
-                n_pos[1] += dir_y
-                while valid_pos(index_to_pos(n_pos)):
-                    squares.append(index_to_pos(n_pos))
-                    if board.board[index_to_pos(n_pos)].name != "":  # Populated by an actual piece
-                        break
-                    n_pos[0] += dir_x
-                    n_pos[1] += dir_y
-
-        return squares
-
-    def attacking_squares(self, pos, board):
-        squares = self.visible_squares(pos, board)
-        attacking_squares = []
-
-        for piece in squares:
-            if board.board[piece].team != self.team:
-                attacking_squares.append(board.board[piece])
-
-        return attacking_squares
+    def movable(self, pos, board=None):
+        pass
 
 
-class ChessManKnight(ChessManTemplate):
-    def __init__(self, team):
+class Knight(ChessManTemplate):
+    def __init__(self, team=""):
         super().__init__("knight", "n", team)
 
-    def visible_squares(self, pos, board):
-        squares = []
-        n_pos = pos_to_index(pos)
+    def visible(self, pos, board=None):
+        pass
 
-        for dir_x in [-2, 2]:
-            for dir_y in [-1, 1]:
-                t_pos = [n_pos[0] - dir_x, n_pos[1] - dir_y]
-                if valid_pos(index_to_pos(t_pos)):
-                    squares.append(index_to_pos(t_pos))
-
-        for dir_x in [-1, 1]:
-            for dir_y in [-2, 2]:
-                t_pos = [n_pos[0] - dir_x, n_pos[1] - dir_y]
-                if valid_pos(index_to_pos(t_pos)):
-                    squares.append(index_to_pos(t_pos))
-
-        return squares
-
-    def attacking_squares(self, pos, board):
-        squares = self.visible_squares(pos, board)
-        attacking_squares = []
-
-        for piece in squares:
-            if board.board[piece].team != self.team:
-                attacking_squares.append(board.board[piece])
-
-        return attacking_squares
+    def movable(self, pos, board=None):
+        pass
 
 
-class ChessManPawn(ChessManTemplate):
-    def __init__(self, team):
+class Pawn(ChessManTemplate):
+    def __init__(self, team=""):
         super().__init__("pawn", "p", team)
 
-    def visible_squares(self, pos, board):
-        squares = []
-        dir_y = 1  # if white
+    def visible(self, pos, board=None):
+        pass
 
-        if self.team == "black":
-            dir_y = -1
-
-        for dir_x in [-1, 1]:
-            n_pos = pos_to_index(pos)
-            n_pos[0] += dir_x
-            n_pos[1] += dir_y
-            if valid_pos(index_to_pos(n_pos)):
-                squares.append(index_to_pos(n_pos))
-
-        return squares
+    def movable(self, pos, board=None):
+        pass
 
 
-class ChessManEmpty(ChessManTemplate):
+class Empty(ChessManTemplate):
     def __init__(self):
         super().__init__("", "", "")
 
 
-# Chess Board
-class ChessBoard:
-    def __init__(self):
+# Chess Board stuff. Support FEN, board states
+class GameState:
+    def __init__(self, fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
+        self.board = None
+        self.active_color = "white"
+        self.castling = "KQkq"
+        self.en_passant = "-"
+        self.board_setup(fen)
+
+    def board_setup(self, fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         self.board = {}
-        for f in files:
-            for r in ranks:
-                key = f"{f}{r}"
-                team = ""
 
-                if r in "1278":
-                    if r == "2":  # White pawns
-                        self.board[key] = ChessManPawn("white")
-                    elif r == "7":  # Black pawns
-                        self.board[key] = ChessManPawn("black")
+        fen_parse = fen.split(' ')
+        fen_pieces = fen_parse[0].split('/')
 
-                    if r in "18":  # Fill back ranks
-                        if r == "1":
-                            team = "white"
-                        elif r == "8":
-                            team = "black"
+        r = 9
 
-                        if f in "ah":  # Rooks
-                            self.board[key] = ChessManRook(team)
-                        elif f in "bg":  # Knights
-                            self.board[key] = ChessManKnight(team)
-                        elif f in "cf":  # Bishops
-                            self.board[key] = ChessManBishop(team)
-                        elif f == "d":  # Queens
-                            self.board[key] = ChessManQueen(team)
-                        elif f == "e":  # Kings
-                            self.board[key] = ChessManKing(team)
+        for rank in fen_pieces:
+            r -= 1
+            # One rank at a time. example: "rnbqkbnr" or "8"
+            f = 1
+
+            for piece in rank:
+                if piece.lower() not in "pnbrqk":  # Must be number of how many files to skip
+                    for i in range(int(piece)):
+                        self.board[index_to_pos((f, r))] = Empty()
+                        f += 1
                 else:
-                    self.board[key] = ChessManEmpty()
+                    temp = piece.lower()
+
+                    if temp == piece:
+                        team = "black"
+                    else:
+                        team = "white"
+
+                    if temp == "k":
+                        self.board[index_to_pos((f, r))] = King(team)
+                    elif temp == "q":
+                        self.board[index_to_pos((f, r))] = Queen(team)
+                    elif temp == "r":
+                        self.board[index_to_pos((f, r))] = Rook(team)
+                    elif temp == "b":
+                        self.board[index_to_pos((f, r))] = Bishop(team)
+                    elif temp == "n":
+                        self.board[index_to_pos((f, r))] = Knight(team)
+                    elif temp == "p":
+                        self.board[index_to_pos((f, r))] = Pawn(team)
+                    f += 1
+
+        if fen_parse[1] == "w":
+            self.active_color = "white"
+        else:
+            self.active_color = "black"
+
+        self.castling = fen_parse[2]
+
+        if fen_parse[3] == "-":
+            self.en_passant = "-"
+        else:
+            self.en_passant = fen_parse[2]
+
+    def move(self, old_pos, new_pos):  # TEMPORARY. DO NOT USE
+        self.board[new_pos] = self.board[old_pos]
+        self.board[old_pos] = Empty()
+        return self
 
     def print_pieces(self):
-        for r in ranks:
+        for pos in self.board.keys():
+            if self.board[pos].name != "":
+                print(f"{pos}:\n{self.board[pos]}\n")
+
+    def pretty_print(self):
+        black_square = 47
+        white_square = 40
+        blue_text = 34
+        red_text = 31
+
+        end_str = ""
+        toggle = False
+
+        for r in reversed(ranks):
             for f in files:
-                if self.board[f"{f}{r}"].team != "":
-                    print(self.board[f"{f}{r}"], '\n')
+                if toggle:
+                    bg = white_square
+                else:
+                    bg = black_square
 
-    def get_visible_pieces(self, pos):  # Returns all pieces that "see" a specific square
-        pieces = []
+                toggle = not toggle
 
-        # Find rooks/queens that can see square
-        visible = ChessManRook("white").visible_squares(pos, self)
-        for piece in visible:
-            if self.board[piece].name == "rook" or self.board[piece].name == "queen":
-                pieces.append((self.board[piece], piece))
+                if self.board[f+r].team == "white":
+                    fg = blue_text
+                else:
+                    fg = red_text
 
-        # Find bishops/queens that can see square
-        visible = ChessManBishop("white").visible_squares(pos, self)
-        for piece in visible:
-            if self.board[piece].name == "bishop" or self.board[piece].name == "queen":
-                pieces.append((self.board[piece], piece))
+                piece = self.board[f+r].notation.upper()
+                if piece == "":
+                    piece = " "
 
-        # Find knights that can see squares
-        visible = ChessManKnight("white").visible_squares(pos, self)
-        for piece in visible:
-            if self.board[piece].name == "knight":
-                pieces.append((self.board[piece], piece))
+                end_str += f"\x1b[1;{fg};{bg}m {piece} \x1b[0m"
+            end_str += "\n"
+            toggle = not toggle
 
-        # Find pawns
-        visible = ChessManPawn("white").visible_squares(pos, self) + ChessManPawn("black").visible_squares(pos, self)
-        for piece in visible:
-            if self.board[piece].name == "pawn":
-                pieces.append((self.board[piece], piece))
-
-        return pieces
+        print(end_str)
 
 
+# For feature testing. copy.deepcopy() is nice
 def main():
-    game_board = ChessBoard()
-    game_board.board["e5"] = ChessManQueen("white")
-    for piece in game_board.get_visible_pieces("c3"):
-        print(f"{piece[1]}:\n{piece[0]}\n")
+    game = GameState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    game.pretty_print()
+    game = GameState("8/2k5/2p5/3q4/5R2/4RK2/8/8 w - - 0 1")
+    game.pretty_print()
 
 
 if __name__ == "__main__":
